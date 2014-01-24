@@ -1,0 +1,11 @@
+.DS_Store
+/.idea/tasks.xml
+/.idea/dataSources.ids
+/.idea/dataSources.xml
+/.idea/dictionaries/
+/.idea/gradle.xml
+/.idea/workspace.xml
+/.gradle
+build/
+gradle.properties
+*.ipr

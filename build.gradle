@@ -1,0 +1,170 @@
+apply plugin: 'idea'
+
+task wrapper(type: Wrapper) {
+   gradleVersion = '1.10'
+}
+
+allprojects { project ->
+
+}
+
+subprojects {
+   apply plugin: 'groovy'
+   apply plugin: 'idea'
+   apply plugin: 'maven'
+   apply plugin: 'osgi'
+
+   compileJava.sourceCompatibility = 1.8
+   compileJava.targetCompatibility = 1.8
+
+   compileGroovy.sourceCompatibility = 1.7
+   compileGroovy.targetCompatibility = 1.7
+
+   sourceSets {
+      main {
+         java {
+            srcDirs = ['src/main/java']
+         }
+         groovy {
+            srcDirs = ['src/main/groovy']
+         }
+         resources {
+            srcDirs = ['src/main/resources']
+         }
+
+         output.resourcesDir = "build/classes/main"
+      }
+
+      test {
+         java {
+            srcDirs = []
+         }
+         groovy {
+            srcDirs = ['src/test/integration/groovy', 'src/test/unit/groovy']
+         }
+         resources {
+            srcDirs = ['src/test/integration/resources', 'src/test/unit/resources']
+         }
+      }
+   }
+
+   repositories {
+      maven {
+         credentials {
+            username unifocusMavenUser
+            password unifocusMavenPassword
+         }
+         url 'http://maven.unifocus.com/libs-release'
+      }
+
+      maven {
+         credentials {
+            username unifocusMavenUser
+            password unifocusMavenPassword
+         }
+         url 'http://maven.unifocus.com/libs-snapshot'
+      }
+
+      maven {
+          url 'https://oss.sonatype.org/content/repositories/snapshots/'
+      }
+
+      mavenCentral()
+   }
+
+   dependencies {
+      compile 'org.codehaus.groovy:groovy-all:2.2.1:indy'
+
+      testCompile 'junit:junit:4.11'
+      testCompile('org.spockframework:spock-core:1.0-groovy-2.0-SNAPSHOT') {
+         exclude group: 'org.codehaus.groovy', module: 'groovy-all'
+      }
+      testCompile 'cglib:cglib-nodep:2.2.2'
+   }
+
+   uploadArchives {
+      repositories {
+         mavenDeployer {
+            repository(url: 'http://maven.unifocus.com/libs-release-local') {
+               authentication(userName: unifocusMavenUser, password: unifocusMavenPassword)
+            }
+            snapshotRepository(url: 'http://maven.unifocus.com/libs-snapshot-local') {
+               authentication(userName: unifocusMavenUser, password: unifocusMavenPassword)
+            }
+         }
+      }
+   }
+
+   tasks.withType(GroovyCompile) {
+      groovyOptions.optimizationOptions.indy = true
+   }
+
+   task sourcesJar(type: Jar, dependsOn: classes) {
+      classifier = 'sources'
+      from sourceSets.main.allSource
+   }
+
+   task javadocJar(type: Jar, dependsOn: javadoc) {
+      classifier = 'javadoc'
+      from javadoc.destinationDir
+   }
+
+   artifacts {
+      archives sourcesJar
+      archives javadocJar
+   }
+
+   task createDirs() << {
+      sourceSets.all {
+         it.java.srcDirs.each { it.mkdirs() }
+         it.groovy.srcDirs.each { it.mkdirs() }
+         it.resources.srcDirs.each { it.mkdirs() }
+      }
+   }
+
+   task createModuleDir() << {
+      file('.').mkdirs()
+   }
+
+   task createBuildFile(dependsOn: [createModuleDir]) << {
+      file('build.gradle').withWriter { out ->
+         out.println("version = '1.0'")
+         out.println()
+         out.println("dependencies {")
+         out.println("}")
+      }
+   }
+
+   task createSourceDirs(dependsOn: [createModuleDir, createBuildFile, createDirs]) << {
+      sourceSets.all {
+         it.java.srcDirs.each { it.mkdirs(); createGitKeep(it) }
+         it.groovy.srcDirs.each { it.mkdirs(); createGitKeep(it) }
+         it.resources.srcDirs.each { it.mkdirs(); createGitKeep(it) }
+      }
+   }
+
+   task createModule(dependsOn: [createModuleDir, createBuildFile, createDirs, createSourceDirs, ideaModule, ideaProject]) << {
+   }
+
+   idea {
+      module {
+         sourceDirs += file('src/main/java')
+         sourceDirs += file('src/main/groovy')
+         sourceDirs += file('src/main/resources')
+
+         testSourceDirs += file('src/test/integration/groovy')
+         testSourceDirs += file('src/test/integration/resources')
+         testSourceDirs += file('src/test/unit/groovy')
+         testSourceDirs += file('src/test/unit/resources')
+
+         inheritOutputDirs = false
+         outputDir = file('build/classes/main')
+         testOutputDir = file('build/classes/test')
+      }
+   }
+}
+
+void createGitKeep(folder) {
+
+   new File(folder, ".gitkeep").withPrintWriter() { }
+}

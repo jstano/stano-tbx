@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/stano-tbx.iml" filepath="$PROJECT_DIR$/stano-tbx.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tbx-core/tbx-core.iml" filepath="$PROJECT_DIR$/tbx-core/tbx-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tbx-hibernate/tbx-hibernate.iml" filepath="$PROJECT_DIR$/tbx-hibernate/tbx-hibernate.iml" />
+    </modules>
+  </component>
+</project>
+
